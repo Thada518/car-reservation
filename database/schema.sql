@@ -51,10 +51,10 @@ CREATE TABLE IF NOT EXISTS bookings (
   FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Seed admin user (password: admin1234)
+-- Seed admin user (password: password)
 INSERT INTO users (employee_id, username, password_hash, full_name, email, department, role) VALUES
-('EMP001', 'admin', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ผู้ดูแลระบบ', 'admin@company.com', 'ธุรการ', 'admin'),
-('EMP002', 'approver1', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ผู้อนุมัติ 1', 'approver1@company.com', 'ธุรการ', 'approver');
+('EMP001', 'admin', '$2a$10$Jl61HuMt6v.jRY0fRz2CTOoypLCdFH7EuWfJb1BptexWQXHQJgj9G', 'ผู้ดูแลระบบ', 'admin@company.com', 'ธุรการ', 'admin'),
+('EMP002', 'approver1', '$2a$10$Jl61HuMt6v.jRY0fRz2CTOoypLCdFH7EuWfJb1BptexWQXHQJgj9G', 'ผู้อนุมัติ 1', 'approver1@company.com', 'ธุรการ', 'approver');
 
 -- Seed vehicles
 INSERT INTO vehicles (name, license_plate, type, color, capacity, description) VALUES
