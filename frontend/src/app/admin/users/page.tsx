@@ -81,13 +81,13 @@ export default function AdminUsersPage() {
                   <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">{label}</label>
                   <input type={type} required={required} value={(form as any)[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               ))}
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">สิทธิ์</label>
                 <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as User['role'] }))}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   <option value="user">พนักงาน</option>
                   <option value="approver">ผู้อนุมัติ</option>
                   <option value="admin">ผู้ดูแลระบบ</option>
@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="text" placeholder="ค้นหาผู้ใช้..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="w-full pl-9 pr-4 py-2 border border-slate-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
         {/* Mobile: card view */}
