@@ -77,7 +77,7 @@ export default function NewBookingPage() {
                 value={form.start_datetime}
                 onChange={e => setForm(f => ({ ...f, start_datetime: e.target.value }))}
                 onBlur={checkAvailability}
-                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">วันเวลาสิ้นสุด *</label>
@@ -85,7 +85,7 @@ export default function NewBookingPage() {
                 value={form.end_datetime}
                 onChange={e => setForm(f => ({ ...f, end_datetime: e.target.value }))}
                 onBlur={checkAvailability}
-                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
@@ -120,7 +120,7 @@ export default function NewBookingPage() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">วัตถุประสงค์ *</label>
             <input type="text" required placeholder="เช่น ติดต่องาน, ประชุม..."
               value={form.purpose} onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))}
-              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
@@ -128,13 +128,13 @@ export default function NewBookingPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">ปลายทาง</label>
               <input type="text" placeholder="ระบุสถานที่"
                 value={form.destination} onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
-                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">จำนวนผู้โดยสาร</label>
               <input type="number" min="1" max="20"
                 value={form.passenger_count} onChange={e => setForm(f => ({ ...f, passenger_count: e.target.value }))}
-                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
@@ -142,7 +142,7 @@ export default function NewBookingPage() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">หมายเหตุ</label>
             <textarea rows={3} placeholder="รายละเอียดเพิ่มเติม..."
               value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
 
           <div className="flex gap-3 pt-1">

@@ -65,17 +65,17 @@ export default function AdminVehiclesPage() {
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">ชื่อรถ *</label>
                 <input type="text" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">ทะเบียนรถ *</label>
                 <input type="text" required value={form.license_plate} onChange={e => setForm(f => ({ ...f, license_plate: e.target.value }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">ประเภทรถ *</label>
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as Vehicle['type'] }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                   <option value="pickup">รถกระบะ</option>
                   <option value="van">รถตู้</option>
                   <option value="sedan">รถเก๋ง</option>
@@ -84,17 +84,17 @@ export default function AdminVehiclesPage() {
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">สี</label>
                 <input type="text" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">จำนวนที่นั่ง</label>
                 <input type="number" min="1" value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">คำอธิบาย</label>
                 <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div className="col-span-full flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowForm(false)}

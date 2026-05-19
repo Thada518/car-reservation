@@ -98,7 +98,7 @@ export default function BookingDetailPage() {
             <h3 className="font-medium text-slate-800 mb-3">เหตุผลการปฏิเสธ</h3>
             <textarea rows={3} value={rejectReason} onChange={e => setRejectReason(e.target.value)}
               placeholder="ระบุเหตุผล..."
-              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none mb-3" />
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none mb-3" />
             <div className="flex gap-3">
               <button onClick={() => setShowReject(false)} className="flex-1 border border-slate-200 py-2 rounded-lg text-sm">ยกเลิก</button>
               <button onClick={handleReject} disabled={!!actionLoading}
