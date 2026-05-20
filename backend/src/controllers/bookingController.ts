@@ -122,6 +122,7 @@ export async function cancelBooking(req: AuthRequest, res: Response) {
 }
 
 export async function approveBooking(req: AuthRequest, res: Response) {
+  const { comment } = req.body;
   const [rows] = await pool.query('SELECT * FROM bookings WHERE id = ?', [req.params.id]) as any[];
   const booking = rows[0];
   if (!booking) return res.status(404).json({ message: 'ไม่พบการจอง' });
@@ -129,14 +130,14 @@ export async function approveBooking(req: AuthRequest, res: Response) {
     return res.status(400).json({ message: 'การจองนี้ไม่ได้อยู่ในสถานะรอดำเนินการ' });
   }
   await pool.query(
-    'UPDATE bookings SET status = ?, approved_by = ?, approved_at = NOW() WHERE id = ?',
-    ['approved', req.user!.id, req.params.id]
+    'UPDATE bookings SET status = ?, approved_by = ?, approved_at = NOW(), notes = COALESCE(?, notes) WHERE id = ?',
+    ['approved', req.user!.id, comment || null, req.params.id]
   );
   return res.json({ message: 'อนุมัติการจองสำเร็จ' });
 }
 
 export async function rejectBooking(req: AuthRequest, res: Response) {
-  const { rejection_reason } = req.body;
+  const { rejection_reason, comment } = req.body;
   const [rows] = await pool.query('SELECT * FROM bookings WHERE id = ?', [req.params.id]) as any[];
   const booking = rows[0];
   if (!booking) return res.status(404).json({ message: 'ไม่พบการจอง' });
@@ -145,7 +146,7 @@ export async function rejectBooking(req: AuthRequest, res: Response) {
   }
   await pool.query(
     'UPDATE bookings SET status = ?, approved_by = ?, approved_at = NOW(), rejection_reason = ? WHERE id = ?',
-    ['rejected', req.user!.id, rejection_reason || null, req.params.id]
+    ['rejected', req.user!.id, comment || rejection_reason || null, req.params.id]
   );
   return res.json({ message: 'ปฏิเสธการจองสำเร็จ' });
 }
@@ -169,6 +170,27 @@ export async function getCalendarBookings(req: AuthRequest, res: Response) {
      WHERE ${conditions.join(' AND ')}
      ORDER BY b.start_datetime`,
     values
+  ) as any[];
+  return res.json(rows);
+}
+
+export async function getTimelineBookings(req: AuthRequest, res: Response) {
+  const { date } = req.query;
+  if (!date) return res.status(400).json({ message: 'กรุณาระบุวันที่' });
+  const start = `${date}T00:00:00`;
+  const end = `${date}T23:59:59`;
+  const [rows] = await pool.query(
+    `SELECT b.id, b.vehicle_id, b.user_id, b.purpose, b.destination, b.passenger_count,
+     b.start_datetime, b.end_datetime, b.status,
+     v.name as vehicle_name, v.license_plate, v.type as vehicle_type, v.capacity,
+     u.full_name as user_name, u.department
+     FROM bookings b
+     JOIN vehicles v ON b.vehicle_id = v.id
+     JOIN users u ON b.user_id = u.id
+     WHERE b.start_datetime < ? AND b.end_datetime > ?
+     AND b.status IN ('pending','approved','completed')
+     ORDER BY b.start_datetime`,
+    [end, start]
   ) as any[];
   return res.json(rows);
 }
