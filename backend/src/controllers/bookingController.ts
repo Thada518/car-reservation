@@ -12,7 +12,7 @@ const bookingSelect = `
 `;
 
 export async function getBookings(req: AuthRequest, res: Response) {
-  const { start, end, status, vehicle_id, user_id } = req.query;
+  const { start, end, status, vehicle_id, user_id, search, page, limit } = req.query;
   const conditions: string[] = ['1=1'];
   const values: any[] = [];
 
@@ -20,6 +20,11 @@ export async function getBookings(req: AuthRequest, res: Response) {
   if (end) { conditions.push('b.end_datetime <= ?'); values.push(end); }
   if (status) { conditions.push('b.status = ?'); values.push(status); }
   if (vehicle_id) { conditions.push('b.vehicle_id = ?'); values.push(vehicle_id); }
+  if (search) {
+    conditions.push('(b.purpose LIKE ? OR v.name LIKE ? OR u.full_name LIKE ?)');
+    const like = `%${search}%`;
+    values.push(like, like, like);
+  }
 
   if (req.user!.role === 'user') {
     conditions.push('b.user_id = ?');
@@ -29,17 +34,33 @@ export async function getBookings(req: AuthRequest, res: Response) {
     values.push(user_id);
   }
 
+  const pageNum = Math.max(1, parseInt(page as string) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(limit as string) || 30));
+  const offset = (pageNum - 1) * pageSize;
+  const where = conditions.join(' AND ');
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) as total FROM bookings b
+     JOIN users u ON b.user_id = u.id
+     JOIN vehicles v ON b.vehicle_id = v.id
+     LEFT JOIN users a ON b.approved_by = a.id
+     WHERE ${where}`,
+    values
+  ) as any[];
+
   const [rows] = await pool.query(
     `SELECT ${bookingSelect}
      FROM bookings b
      JOIN users u ON b.user_id = u.id
      JOIN vehicles v ON b.vehicle_id = v.id
      LEFT JOIN users a ON b.approved_by = a.id
-     WHERE ${conditions.join(' AND ')}
-     ORDER BY b.start_datetime DESC`,
-    values
+     WHERE ${where}
+     ORDER BY b.start_datetime DESC
+     LIMIT ? OFFSET ?`,
+    [...values, pageSize, offset]
   ) as any[];
-  return res.json(rows);
+
+  return res.json({ data: rows, total, page: pageNum, limit: pageSize });
 }
 
 export async function getBooking(req: AuthRequest, res: Response) {

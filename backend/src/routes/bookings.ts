@@ -2,13 +2,14 @@ import { Router } from 'express';
 import {
   getBookings, getBooking, createBooking, updateBooking,
   cancelBooking, approveBooking, rejectBooking,
-  getCalendarBookings, getDashboardStats
+  getCalendarBookings, getTimelineBookings, getDashboardStats
 } from '../controllers/bookingController';
 import { authenticate, requireApprover } from '../middleware/auth';
 
 const router = Router();
 router.use(authenticate);
 router.get('/calendar', getCalendarBookings);
+router.get('/timeline', getTimelineBookings);
 router.get('/stats', getDashboardStats);
 router.get('/', getBookings);
 router.get('/:id', getBooking);

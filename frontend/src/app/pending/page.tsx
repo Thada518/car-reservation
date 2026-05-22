@@ -14,7 +14,7 @@ export default function PendingPage() {
   const [comments, setComments] = useState<Record<number, string>>({});
 
   const load = () => {
-    api.get('/bookings', { params: { status: 'pending' } }).then(r => setBookings(r.data)).finally(() => setLoading(false));
+    api.get('/bookings', { params: { status: 'pending' } }).then(r => setBookings(r.data.data ?? r.data)).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
