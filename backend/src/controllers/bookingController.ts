@@ -26,9 +26,9 @@ export async function getBookings(req: AuthRequest, res: Response) {
     values.push(like, like, like);
   }
 
-  if (req.user!.role === 'user') {
+  if (req.user?.role === 'user') {
     conditions.push('b.user_id = ?');
-    values.push(req.user!.id);
+    values.push(req.user.id);
   } else if (user_id) {
     conditions.push('b.user_id = ?');
     values.push(user_id);
@@ -75,7 +75,7 @@ export async function getBooking(req: AuthRequest, res: Response) {
   ) as any[];
   if (!rows[0]) return res.status(404).json({ message: 'ไม่พบการจอง' });
   const booking = rows[0];
-  if (req.user!.role === 'user' && booking.user_id !== req.user!.id) {
+  if (req.user?.role === 'user' && booking.user_id !== req.user.id) {
     return res.status(403).json({ message: 'ไม่มีสิทธิ์เข้าถึง' });
   }
   return res.json(booking);
