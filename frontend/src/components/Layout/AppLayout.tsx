@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import Sidebar from './Sidebar';
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'แดชบอร์ด',
@@ -15,15 +16,15 @@ const pageTitles: Record<string, string> = {
   '/admin/users': 'จัดการผู้ใช้',
 };
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children, requireAuth = true }: { children: React.ReactNode; requireAuth?: boolean }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) router.replace('/login');
-  }, [user, isLoading, router]);
+    if (!isLoading && !user && requireAuth) router.replace('/login');
+  }, [user, isLoading, router, requireAuth]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -40,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!user && requireAuth) return null;
 
   const title = Object.entries(pageTitles).find(([key]) =>
     key === pathname || (key !== '/dashboard' && key !== '/bookings' && pathname.startsWith(key))
@@ -61,9 +62,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="text-lg">🚗</span>
             <span className="font-semibold text-slate-800 text-sm">{title}</span>
           </div>
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-            {user.full_name.charAt(0)}
-          </div>
+          {user ? (
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              {user.full_name.charAt(0)}
+            </div>
+          ) : (
+            <Link href="/login" className="text-xs font-medium text-blue-600 hover:underline">
+              เข้าสู่ระบบ
+            </Link>
+          )}
         </header>
 
         <main className="flex-1 overflow-auto">

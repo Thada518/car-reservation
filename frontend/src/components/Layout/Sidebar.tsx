@@ -5,17 +5,17 @@ import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Calendar, Car, Users, ClipboardList,
-  CheckSquare, LogOut, ChevronRight, Settings, X
+  CheckSquare, LogOut, ChevronRight, Settings, X, LogIn
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['admin', 'approver', 'user'] },
-  { href: '/calendar', label: 'ปฏิทินการจอง', icon: Calendar, roles: ['admin', 'approver', 'user'] },
-  { href: '/bookings', label: 'รายการจอง', icon: ClipboardList, roles: ['admin', 'approver', 'user'] },
-  { href: '/bookings/new', label: 'จองรถ', icon: Car, roles: ['admin', 'approver', 'user'] },
-  { href: '/pending', label: 'รออนุมัติ', icon: CheckSquare, roles: ['admin', 'approver'] },
-  { href: '/admin/vehicles', label: 'จัดการรถ', icon: Settings, roles: ['admin'] },
-  { href: '/admin/users', label: 'จัดการผู้ใช้', icon: Users, roles: ['admin'] },
+  { href: '/dashboard', label: 'แดชบอร์ด', icon: LayoutDashboard, roles: ['admin', 'approver', 'user'], public: false },
+  { href: '/calendar', label: 'ปฏิทินการจอง', icon: Calendar, roles: ['admin', 'approver', 'user'], public: true },
+  { href: '/bookings', label: 'รายการจอง', icon: ClipboardList, roles: ['admin', 'approver', 'user'], public: true },
+  { href: '/bookings/new', label: 'จองรถ', icon: Car, roles: ['admin', 'approver', 'user'], public: true },
+  { href: '/pending', label: 'รออนุมัติ', icon: CheckSquare, roles: ['admin', 'approver'], public: false },
+  { href: '/admin/vehicles', label: 'จัดการรถ', icon: Settings, roles: ['admin'], public: false },
+  { href: '/admin/users', label: 'จัดการผู้ใช้', icon: Users, roles: ['admin'], public: false },
 ];
 
 interface SidebarProps {
@@ -27,7 +27,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  const filtered = navItems.filter(item => user && item.roles.includes(user.role));
+  const filtered = user
+    ? navItems.filter(item => item.roles.includes(user.role))
+    : navItems.filter(item => item.public);
 
   const content = (
     <aside className="w-64 bg-slate-900 min-h-screen flex flex-col h-full">
@@ -69,20 +71,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </nav>
 
       <div className="p-3 border-t border-slate-700">
-        <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            {user?.full_name.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">{user?.full_name}</p>
-            <p className="text-slate-400 text-xs truncate">{user?.department || user?.role}</p>
-          </div>
-        </div>
-        <button onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm">
-          <LogOut size={16} />
-          ออกจากระบบ
-        </button>
+        {user ? (
+          <>
+            <div className="flex items-center gap-3 px-3 py-2 mb-1">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                {user.full_name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
+                <p className="text-slate-400 text-xs truncate">{user.department || user.role}</p>
+              </div>
+            </div>
+            <button onClick={logout}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm">
+              <LogOut size={16} />
+              ออกจากระบบ
+            </button>
+          </>
+        ) : (
+          <Link href="/login" onClick={onClose}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-sm">
+            <LogIn size={16} />
+            เข้าสู่ระบบ
+          </Link>
+        )}
       </div>
     </aside>
   );

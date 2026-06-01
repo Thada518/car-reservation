@@ -54,7 +54,7 @@ export default function BookingsPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <AppLayout>
+    <AppLayout requireAuth={false}>
       <div className="space-y-4 md:space-y-5">
         <div className="flex items-center justify-between">
           <div>

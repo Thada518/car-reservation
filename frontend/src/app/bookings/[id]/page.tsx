@@ -37,14 +37,14 @@ export default function BookingDetailPage() {
     try { await api.delete(`/bookings/${id}`); router.push('/bookings'); } finally { setActionLoading(''); }
   };
 
-  if (loading) return <AppLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div></AppLayout>;
-  if (!booking) return <AppLayout><p className="text-center text-slate-500 py-16">ไม่พบการจอง</p></AppLayout>;
+  if (loading) return <AppLayout requireAuth={false}><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div></AppLayout>;
+  if (!booking) return <AppLayout requireAuth={false}><p className="text-center text-slate-500 py-16">ไม่พบการจอง</p></AppLayout>;
 
   const canApprove = ['admin', 'approver'].includes(user?.role || '') && booking.status === 'pending';
   const canCancel = booking.status === 'pending' || (booking.status === 'approved' && (user?.role !== 'user' || booking.user_id === user.id));
 
   return (
-    <AppLayout>
+    <AppLayout requireAuth={false}>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
