@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppLayout from '@/components/Layout/AppLayout';
+import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
 import { Vehicle, Booking } from '@/types';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, AlertCircle } from 'lucide-react';
+import { vehicleTypeIcon } from '@/lib/utils';
 
 const START_HOUR = 7;
 const END_HOUR = 19;
-const SLOT_HEIGHT = 32; // px per 30-min slot
+const SLOT_HEIGHT = 32;
 
 const DAY_TH = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const DAY_SHORT = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -49,6 +52,18 @@ function getHeight(start: string, end: string): number {
   return Math.max(SLOT_HEIGHT * 0.75, (ms / 1800000) * SLOT_HEIGHT);
 }
 
+function slotToLocal(dateStr: string, slotIndex: number): string {
+  const h = Math.floor(slotIndex / 2) + START_HOUR;
+  const m = slotIndex % 2 === 0 ? '00' : '30';
+  return `${dateStr}T${String(h).padStart(2, '0')}:${m}`;
+}
+
+function addHour(datetimeLocal: string): string {
+  const d = new Date(datetimeLocal);
+  d.setHours(d.getHours() + 1);
+  return `${toDateStr(d)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 // ─── Mini Calendar ───────────────────────────────────────────────
 function MiniCalendar({ year, month, selected, today, onSelect }: {
   year: number; month: number; selected: Date; today: Date; onSelect: (d: Date) => void;
@@ -87,12 +102,140 @@ function MiniCalendar({ year, month, selected, today, onSelect }: {
   );
 }
 
+// ─── Booking Modal ───────────────────────────────────────────────
+function BookingModal({ vehicle, startLocal, onClose, onSuccess }: {
+  vehicle: Vehicle;
+  startLocal: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [form, setForm] = useState({
+    purpose: '',
+    destination: '',
+    passenger_count: '1',
+    end_datetime: addHour(startLocal),
+    notes: '',
+  });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await api.post('/bookings', {
+        vehicle_id: vehicle.id,
+        purpose: form.purpose,
+        destination: form.destination || undefined,
+        passenger_count: Number(form.passenger_count),
+        start_datetime: startLocal + ':00',
+        end_datetime: form.end_datetime + ':00',
+        notes: form.notes || undefined,
+      });
+      onSuccess();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const startDisplay = new Date(startLocal).toLocaleTimeString('th', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{vehicleTypeIcon[vehicle.type] || '🚗'}</span>
+            <div>
+              <p className="font-semibold text-slate-900 text-sm">{vehicle.name}</p>
+              <p className="text-xs text-slate-500">{vehicle.license_plate} · เริ่ม {startDisplay}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+            <X size={18} className="text-slate-500" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-xs">
+              <AlertCircle size={14} className="flex-shrink-0" />{error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">วันเวลาสิ้นสุด *</label>
+            <input type="datetime-local" required
+              value={form.end_datetime}
+              min={startLocal}
+              onChange={e => setForm(f => ({ ...f, end_datetime: e.target.value }))}
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">วัตถุประสงค์ *</label>
+            <input type="text" required placeholder="เช่น ติดต่องาน, ประชุม..."
+              value={form.purpose}
+              onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))}
+              autoFocus
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">ปลายทาง</label>
+              <input type="text" placeholder="สถานที่"
+                value={form.destination}
+                onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">จำนวนผู้โดยสาร</label>
+              <input type="number" min="1" max="20"
+                value={form.passenger_count}
+                onChange={e => setForm(f => ({ ...f, passenger_count: e.target.value }))}
+                className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+            <textarea rows={2} placeholder="รายละเอียดเพิ่มเติม..."
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              className="w-full border border-slate-400 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose}
+              className="flex-1 border border-slate-200 text-slate-600 py-2.5 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors">
+              ยกเลิก
+            </button>
+            <button type="submit" disabled={submitting}
+              className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 text-sm font-medium transition-colors">
+              {submitting ? 'กำลังส่ง...' : 'ยืนยันการจอง'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ───────────────────────────────────────────────────
 export default function CalendarPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [selected, setSelected] = useState(() => new Date());
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState<{ vehicle: Vehicle; startLocal: string } | null>(null);
   const today = new Date();
 
   useEffect(() => {
@@ -122,7 +265,12 @@ export default function CalendarPage() {
 
   const bookingsFor = (vid: number) => bookings.filter(b => b.vehicle_id === vid);
 
-  // 3 mini-calendar months: prev, current, next relative to selected
+  const handleSlotClick = (vehicle: Vehicle, slotIndex: number) => {
+    if (!user) { router.push('/login'); return; }
+    const startLocal = slotToLocal(toDateStr(selected), slotIndex);
+    setModal({ vehicle, startLocal });
+  };
+
   const miniMonths = [-1, 0, 1].map(offset => {
     const d = new Date(selected.getFullYear(), selected.getMonth() + offset, 1);
     return { year: d.getFullYear(), month: d.getMonth() };
@@ -150,7 +298,7 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-slate-900">ตารางการจองรถ</h1>
-            <p className="text-slate-500 text-sm">ภาพรวมการใช้รถแต่ละคันรายวัน</p>
+            <p className="text-slate-500 text-sm">คลิกช่องว่างเพื่อจองรถ</p>
           </div>
           <Link href="/bookings/new"
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
@@ -217,14 +365,18 @@ export default function CalendarPage() {
                 {/* Vehicle columns */}
                 {vehicles.map(v => (
                   <div key={v.id} className="flex-1 relative border-r border-slate-200 last:border-r-0">
-                    {/* Grid background */}
+                    {/* Clickable grid slots */}
                     {TIME_SLOTS.map((t, i) => (
                       <div key={t}
                         style={{ height: SLOT_HEIGHT }}
-                        className={`border-b ${i % 2 === 0
-                          ? 'bg-white border-slate-200'
-                          : 'bg-slate-50/60 border-slate-100'}`}
-                      />
+                        onClick={() => handleSlotClick(v, i)}
+                        className={`border-b cursor-pointer transition-colors group ${i % 2 === 0
+                          ? 'bg-white border-slate-200 hover:bg-blue-50'
+                          : 'bg-slate-50/60 border-slate-100 hover:bg-blue-50'}`}>
+                        <span className="hidden group-hover:flex items-center justify-center h-full text-[10px] text-blue-400 select-none">
+                          + จอง {t}
+                        </span>
+                      </div>
                     ))}
 
                     {/* Booking blocks */}
@@ -236,6 +388,7 @@ export default function CalendarPage() {
                       const endTime = new Date(b.end_datetime).toLocaleTimeString('th', { hour: '2-digit', minute: '2-digit' });
                       return (
                         <Link key={b.id} href={`/bookings/${b.id}`}
+                          onClick={e => e.stopPropagation()}
                           className={`absolute inset-x-0.5 rounded border overflow-hidden ${cls} hover:brightness-110 transition-all z-10 flex flex-col px-1.5 py-0.5`}
                           style={{ top, height: Math.max(height, 18) }}
                           title={`${b.purpose} | ${b.user_name} | ${startTime}–${endTime}`}>
@@ -275,6 +428,16 @@ export default function CalendarPage() {
         </div>
 
       </div>
+
+      {/* Booking modal */}
+      {modal && (
+        <BookingModal
+          vehicle={modal.vehicle}
+          startLocal={modal.startLocal}
+          onClose={() => setModal(null)}
+          onSuccess={() => { setModal(null); fetchTimeline(selected); }}
+        />
+      )}
     </AppLayout>
   );
 }
