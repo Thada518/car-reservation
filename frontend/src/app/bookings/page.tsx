@@ -5,11 +5,13 @@ import AppLayout from '@/components/Layout/AppLayout';
 import api from '@/lib/api';
 import { Booking } from '@/types';
 import { formatDateTime, statusColor, statusLabel, vehicleTypeIcon } from '@/lib/utils';
-import { Plus, Search, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, Search, ChevronRight, ChevronLeft, User, Users } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 const PAGE_SIZE = 30;
 
 export default function BookingsPage() {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -17,25 +19,27 @@ export default function BookingsPage() {
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [myOnly, setMyOnly] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchBookings = useCallback(async (p: number, q: string, s: string) => {
+  const fetchBookings = useCallback(async (p: number, q: string, s: string, mine: boolean) => {
     setLoading(true);
     try {
       const params: Record<string, string | number> = { page: p, limit: PAGE_SIZE };
       if (s) params.status = s;
       if (q) params.search = q;
+      if (mine && user?.id) params.user_id = user.id;
       const r = await api.get('/bookings', { params });
       setBookings(r.data.data);
       setTotal(r.data.total);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    fetchBookings(page, search, statusFilter);
-  }, [page, search, statusFilter, fetchBookings]);
+    fetchBookings(page, search, statusFilter, myOnly);
+  }, [page, search, statusFilter, myOnly, fetchBookings]);
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
@@ -48,6 +52,11 @@ export default function BookingsPage() {
 
   const handleStatusChange = (val: string) => {
     setStatusFilter(val);
+    setPage(1);
+  };
+
+  const handleMyOnlyToggle = (val: boolean) => {
+    setMyOnly(val);
     setPage(1);
   };
 
@@ -85,6 +94,16 @@ export default function BookingsPage() {
             <option value="rejected">ปฏิเสธ</option>
             <option value="cancelled">ยกเลิก</option>
           </select>
+          <div className="flex rounded-lg border border-slate-400 overflow-hidden text-sm">
+            <button onClick={() => handleMyOnlyToggle(false)}
+              className={`flex items-center gap-1.5 px-3 py-2 transition-colors ${!myOnly ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+              <Users size={14} /><span className="hidden sm:inline">ทั้งหมด</span>
+            </button>
+            <button onClick={() => handleMyOnlyToggle(true)}
+              className={`flex items-center gap-1.5 px-3 py-2 transition-colors ${myOnly ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+              <User size={14} /><span className="hidden sm:inline">ของฉัน</span>
+            </button>
+          </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">

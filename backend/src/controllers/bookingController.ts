@@ -26,10 +26,7 @@ export async function getBookings(req: AuthRequest, res: Response) {
     values.push(like, like, like);
   }
 
-  if (req.user?.role === 'user') {
-    conditions.push('b.user_id = ?');
-    values.push(req.user.id);
-  } else if (user_id) {
+  if (user_id) {
     conditions.push('b.user_id = ?');
     values.push(user_id);
   }
