@@ -74,11 +74,7 @@ export async function getBooking(req: AuthRequest, res: Response) {
     [req.params.id]
   ) as any[];
   if (!rows[0]) return res.status(404).json({ message: 'ไม่พบการจอง' });
-  const booking = rows[0];
-  if (req.user?.role === 'user' && booking.user_id !== req.user.id) {
-    return res.status(403).json({ message: 'ไม่มีสิทธิ์เข้าถึง' });
-  }
-  return res.json(booking);
+  return res.json(rows[0]);
 }
 
 export async function createBooking(req: AuthRequest, res: Response) {

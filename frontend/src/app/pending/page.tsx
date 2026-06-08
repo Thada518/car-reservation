@@ -5,16 +5,24 @@ import AppLayout from '@/components/Layout/AppLayout';
 import api from '@/lib/api';
 import { Booking } from '@/types';
 import { formatDateTime, vehicleTypeIcon } from '@/lib/utils';
-import { CheckCircle, XCircle, ChevronRight, Clock, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronRight, Clock, MessageSquare, RotateCcw } from 'lucide-react';
 
 export default function PendingPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [approved, setApproved] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<number | null>(null);
   const [comments, setComments] = useState<Record<number, string>>({});
 
   const load = () => {
-    api.get('/bookings', { params: { status: 'pending' } }).then(r => setBookings(r.data.data ?? r.data)).finally(() => setLoading(false));
+    setLoading(true);
+    Promise.all([
+      api.get('/bookings', { params: { status: 'pending', limit: 100 } }),
+      api.get('/bookings', { params: { status: 'approved', limit: 100 } }),
+    ]).then(([p, a]) => {
+      setBookings(p.data.data ?? p.data);
+      setApproved(a.data.data ?? a.data);
+    }).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -34,14 +42,21 @@ export default function PendingPage() {
     } finally { setActing(null); }
   };
 
+  const unapprove = async (id: number) => {
+    if (!confirm('ยืนยันการยกเลิกการอนุมัติ? การจองจะกลับเป็นสถานะรอดำเนินการ')) return;
+    setActing(id);
+    try { await api.put(`/bookings/${id}/unapprove`); load(); } finally { setActing(null); }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-4 md:space-y-5">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">รายการรออนุมัติ</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">รายการรออนุมัติ {bookings.length > 0 && <span className="text-base font-normal text-amber-600">({bookings.length})</span>}</h1>
           <p className="text-slate-500 text-xs md:text-sm mt-0.5">จัดการคำขอจองรถที่รอดำเนินการ</p>
         </div>
 
+        {/* pending section */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-40">
@@ -100,6 +115,41 @@ export default function PendingPage() {
             </div>
           )}
         </div>
+
+        {/* approved section */}
+        {!loading && approved.length > 0 && (
+          <div>
+            <h2 className="text-base font-semibold text-slate-700 mb-2">อนุมัติแล้ว ({approved.length})</h2>
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="divide-y divide-slate-100">
+                {approved.map(b => (
+                  <div key={b.id} className="p-3 md:p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0 mt-0.5">
+                        {vehicleTypeIcon[b.vehicle_type] || '🚗'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{b.purpose}</p>
+                        <p className="text-xs text-slate-600">{b.vehicle_name} · {b.license_plate}</p>
+                        <p className="text-xs text-slate-400">{formatDateTime(b.start_datetime)} – {formatDateTime(b.end_datetime)}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">ผู้จอง: <span className="font-medium">{b.user_name}</span>{b.department && ` (${b.department})`}</p>
+                      </div>
+                      <Link href={`/bookings/${b.id}`} className="p-1.5 hover:bg-slate-100 rounded-lg flex-shrink-0">
+                        <ChevronRight size={15} className="text-slate-400" />
+                      </Link>
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <button onClick={() => unapprove(b.id)} disabled={acting === b.id}
+                        className="flex items-center gap-1.5 border border-amber-300 text-amber-700 bg-amber-50 px-3 py-2 rounded-lg hover:bg-amber-100 disabled:opacity-50 text-xs font-medium transition-colors">
+                        <RotateCcw size={13} />{acting === b.id ? 'กำลังดำเนินการ...' : 'ยกเลิกการอนุมัติ'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

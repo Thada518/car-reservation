@@ -46,9 +46,11 @@ export default function BookingDetailPage() {
   if (loading) return <AppLayout requireAuth={false}><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div></AppLayout>;
   if (!booking) return <AppLayout requireAuth={false}><p className="text-center text-slate-500 py-16">ไม่พบการจอง</p></AppLayout>;
 
-  const canApprove = ['admin', 'approver'].includes(user?.role || '') && booking.status === 'pending';
-  const canUnapprove = ['admin', 'approver'].includes(user?.role || '') && booking.status === 'approved';
-  const canCancel = booking.status === 'pending' || (booking.status === 'approved' && (user?.role !== 'user' || booking.user_id === user.id));
+  const isOwner = user?.id === booking.user_id;
+  const isAdminOrApprover = ['admin', 'approver'].includes(user?.role || '');
+  const canApprove = isAdminOrApprover && booking.status === 'pending';
+  const canUnapprove = isAdminOrApprover && booking.status === 'approved';
+  const canCancel = (booking.status === 'pending' || booking.status === 'approved') && (isOwner || isAdminOrApprover);
 
   return (
     <AppLayout requireAuth={false}>
