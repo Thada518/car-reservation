@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   getBookings, getBooking, createBooking, updateBooking,
-  cancelBooking, approveBooking, rejectBooking,
+  cancelBooking, approveBooking, rejectBooking, unapproveBooking,
   getCalendarBookings, getTimelineBookings, getDashboardStats
 } from '../controllers/bookingController';
 import { authenticate, optionalAuthenticate, requireApprover } from '../middleware/auth';
@@ -16,6 +16,7 @@ router.post('/', authenticate, createBooking);
 router.put('/:id', authenticate, updateBooking);
 router.delete('/:id', authenticate, cancelBooking);
 router.put('/:id/approve', authenticate, requireApprover, approveBooking);
+router.put('/:id/unapprove', authenticate, requireApprover, unapproveBooking);
 router.put('/:id/reject', authenticate, requireApprover, rejectBooking);
 
 export default router;

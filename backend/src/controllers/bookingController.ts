@@ -157,6 +157,20 @@ export async function approveBooking(req: AuthRequest, res: Response) {
   return res.json({ message: 'อนุมัติการจองสำเร็จ' });
 }
 
+export async function unapproveBooking(req: AuthRequest, res: Response) {
+  const [rows] = await pool.query('SELECT * FROM bookings WHERE id = ?', [req.params.id]) as any[];
+  const booking = rows[0];
+  if (!booking) return res.status(404).json({ message: 'ไม่พบการจอง' });
+  if (booking.status !== 'approved') {
+    return res.status(400).json({ message: 'การจองนี้ไม่ได้อยู่ในสถานะอนุมัติแล้ว' });
+  }
+  await pool.query(
+    'UPDATE bookings SET status = ?, approved_by = NULL, approved_at = NULL WHERE id = ?',
+    ['pending', req.params.id]
+  );
+  return res.json({ message: 'ยกเลิกการอนุมัติสำเร็จ' });
+}
+
 export async function rejectBooking(req: AuthRequest, res: Response) {
   const { rejection_reason, comment } = req.body;
   const [rows] = await pool.query('SELECT * FROM bookings WHERE id = ?', [req.params.id]) as any[];

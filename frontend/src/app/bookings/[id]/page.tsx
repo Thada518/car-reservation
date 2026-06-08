@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import api from '@/lib/api';
 import { Booking } from '@/types';
 import { formatDateTime, statusColor, statusLabel, vehicleTypeIcon, vehicleTypeLabel } from '@/lib/utils';
-import { ArrowLeft, CheckCircle, XCircle, Ban, MapPin, Users, FileText, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Ban, MapPin, Users, FileText, Clock, RotateCcw } from 'lucide-react';
 
 export default function BookingDetailPage() {
   const { id } = useParams();
@@ -31,6 +31,12 @@ export default function BookingDetailPage() {
     try { await api.put(`/bookings/${id}/reject`, { rejection_reason: rejectReason }); setShowReject(false); load(); } finally { setActionLoading(''); }
   };
 
+  const handleUnapprove = async () => {
+    if (!confirm('ยืนยันการยกเลิกการอนุมัติ? การจองจะกลับเป็นสถานะรอดำเนินการ')) return;
+    setActionLoading('unapprove');
+    try { await api.put(`/bookings/${id}/unapprove`); load(); } finally { setActionLoading(''); }
+  };
+
   const handleCancel = async () => {
     if (!confirm('ยืนยันการยกเลิกการจอง?')) return;
     setActionLoading('cancel');
@@ -41,6 +47,7 @@ export default function BookingDetailPage() {
   if (!booking) return <AppLayout requireAuth={false}><p className="text-center text-slate-500 py-16">ไม่พบการจอง</p></AppLayout>;
 
   const canApprove = ['admin', 'approver'].includes(user?.role || '') && booking.status === 'pending';
+  const canUnapprove = ['admin', 'approver'].includes(user?.role || '') && booking.status === 'approved';
   const canCancel = booking.status === 'pending' || (booking.status === 'approved' && (user?.role !== 'user' || booking.user_id === user.id));
 
   return (
@@ -121,6 +128,12 @@ export default function BookingDetailPage() {
                 <XCircle size={16} />ปฏิเสธ
               </button>
             </>
+          )}
+          {canUnapprove && !showReject && (
+            <button onClick={handleUnapprove} disabled={!!actionLoading}
+              className="flex items-center gap-2 border border-amber-300 text-amber-700 bg-amber-50 px-4 py-2.5 rounded-lg hover:bg-amber-100 text-sm font-medium">
+              <RotateCcw size={16} />{actionLoading === 'unapprove' ? 'กำลังดำเนินการ...' : 'ยกเลิกการอนุมัติ'}
+            </button>
           )}
           {canCancel && !showReject && (
             <button onClick={handleCancel} disabled={!!actionLoading}
