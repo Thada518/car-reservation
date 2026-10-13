@@ -15,6 +15,13 @@ export const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   charset: 'utf8mb4',
+  // DB stores Thai local time; server runs in UTC
+  timezone: '+07:00',
+});
+
+// Make NOW()/CURDATE() and TIMESTAMP columns use Thai time too
+pool.pool.on('connection', (conn) => {
+  conn.query("SET time_zone = '+07:00'");
 });
 
 export async function testConnection() {
