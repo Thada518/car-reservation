@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/Layout/AppLayout';
-import api from '@/lib/api';
+import api, { isTokenExpired, redirectToLogin } from '@/lib/api';
 import { Booking } from '@/types';
 import { formatDateTime, statusColor, statusLabel, vehicleTypeIcon } from '@/lib/utils';
 import { Plus, Search, ChevronRight, ChevronLeft, User, Users } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 const PAGE_SIZE = 30;
 
 export default function BookingsPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, sessionExpired } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -22,7 +22,17 @@ export default function BookingsPage() {
   const [myOnly, setMyOnly] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Guests can browse bookings, but a logged-in user whose token expired must log in again
+  useEffect(() => {
+    if (!authLoading && sessionExpired) redirectToLogin();
+  }, [authLoading, sessionExpired]);
+
   const fetchBookings = useCallback(async (p: number, q: string, s: string, mine: boolean) => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken && isTokenExpired(storedToken)) {
+      redirectToLogin();
+      return;
+    }
     setLoading(true);
     try {
       const params: Record<string, string | number> = { page: p, limit: PAGE_SIZE };

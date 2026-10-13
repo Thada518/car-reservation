@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api from './api';
+import api, { isTokenExpired } from './api';
 import { User, AuthContextType } from '@/types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -9,23 +9,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
-      try {
-        const payload = JSON.parse(atob(storedToken.split('.')[1]));
-        if (payload.exp * 1000 > Date.now()) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-        } else {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      } catch {
+      if (!isTokenExpired(storedToken)) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } else {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setSessionExpired(true);
       }
     }
     setIsLoading(false);
@@ -37,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
+    setSessionExpired(false);
   };
 
   const logout = () => {
@@ -47,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );

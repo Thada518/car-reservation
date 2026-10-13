@@ -60,4 +60,6 @@ export interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  /** true when a stored session was found but its token had expired */
+  sessionExpired: boolean;
 }
