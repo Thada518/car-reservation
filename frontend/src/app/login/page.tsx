@@ -12,7 +12,9 @@ function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') || '/calendar';
+  const rawReturnUrl = searchParams.get('returnUrl') || '';
+  // Only allow same-site paths to prevent open redirects
+  const returnUrl = /^\/(?![/\\])/.test(rawReturnUrl) ? rawReturnUrl : '/calendar';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
